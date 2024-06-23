@@ -1,18 +1,15 @@
+version: "2.2"
 services:
-  maven-job-builder:
-    image: maven:3.9.7-eclipse-temurin-11
-    volumes:
-      - ./Websocket-Job:/Websocket-Job
-      - jobs:/jobs
-    working_dir: /Websocket-Job
-    command: >
-      bash -c "mvn clean package &&
-      cp ./target/Websocket-job.jar /jobs"
+  flink-python-build:
+    build: .
+    image: flink-python
 
   jobmanager:
-    image: flink:latest
+    image: flink-python
     volumes:
-      - jobs:/opt/flink/jobs
+      - ./jobs:/opt/flink/py-jobs
+    depends_on:
+      - flink-python-build
     ports:
       - "8085:8081"
     command: jobmanager
@@ -20,10 +17,13 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
+        python.client.executable: python3
+        python.executable: python3
 
   taskmanager:
-    image: flink:latest
+    image: flink-python
     depends_on:
+      - flink-python-build
       - jobmanager
     command: taskmanager
     scale: 1
@@ -32,6 +32,8 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 2
+        python.client.executable: python3
+        python.executable: python3
 
   broker:
     image: confluentinc/cp-kafka:7.6.1
@@ -174,5 +176,3 @@ services:
       KAFKA_REST_BOOTSTRAP_SERVERS: "broker:29092"
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-volumes:
-  jobs:

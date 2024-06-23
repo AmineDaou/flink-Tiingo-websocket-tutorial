@@ -1,21 +1,24 @@
 package org.example.sources;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.commons.math3.linear.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.concurrent.CompletionStage;
 
-public class MySource implements SourceFunction<String> {
+public class WebSocketFunction implements SourceFunction<String> {
     private static final long serialVersionUID = 3978123556403297086L;
-    
+
     private volatile boolean isRunning = true;
     private final String url;
+    private String message;
     private transient WebSocket ws;
-    public MySource(String url) {
+    public WebSocketFunction(String url, String message) {
+        this.url = url;
+        this.message = message;
+    }
+    public WebSocketFunction(String url) {
         this.url = url;
     }
 
@@ -70,6 +73,10 @@ public class MySource implements SourceFunction<String> {
                 })
                 .join();
 
+        if(this.message != null) {
+            ws.sendText(this.message, true);
+        }
+        
         while(isRunning) {
             Thread.sleep(1000);
         }

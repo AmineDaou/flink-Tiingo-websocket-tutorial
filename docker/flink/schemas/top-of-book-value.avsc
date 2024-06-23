@@ -1,0 +1,10 @@
+{
+    "type": "record",
+    "namespace": "org.example",
+    "name": "topOfBook",
+    "fields": [
+        { "name": "service", "type": "string"},
+        { "name": "messageType", "type": "string" },
+        { "name": "data", "type": {"type" : "array", "items" : ["string","double"]}}
+    ]
+}
