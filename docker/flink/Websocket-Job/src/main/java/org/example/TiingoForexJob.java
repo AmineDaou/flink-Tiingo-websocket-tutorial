@@ -21,17 +21,17 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 import org.example.sources.WebSocketFunction;
 
-import java.util.*;
+import java.util.ArrayList;
 
 public class TiingoForexJob {
 
     public static void main(String[] args) throws Exception {
-        String url = "wss://api.tiingo.com/crypto";
+        String url = "wss://api.tiingo.com/fx";
         String message = "{\n" +
                 "   \"eventName\":\"subscribe\",\n" +
                 "   \"authorization\":\"be52bbb227b54f3f631930ffd45d73c44a756e15\",\n" +
                 "   \"eventData\":{\n" +
-                "      \"thresholdLevel\":2\n" +
+                "      \"thresholdLevel\":5\n" +
                 //"      \"tickers\": [ \"eurusd\"]\n" +
                 "\n" +
                 "   }\n" +
@@ -88,9 +88,8 @@ public class TiingoForexJob {
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
         DataStream<String> sideOutputStream = ds.getSideOutput(outputTag);
-        sideOutputStream.print();
-        ds.sinkTo(validSink);
-        sideOutputStream.sinkTo(invalidSink);
+        ds.sinkTo(validSink).name("Valid Events");
+        sideOutputStream.sinkTo(invalidSink).name("Invalid Events");
         env.execute();
     }
 

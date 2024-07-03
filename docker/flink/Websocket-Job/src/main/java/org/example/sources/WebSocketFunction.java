@@ -1,6 +1,8 @@
 package org.example.sources;
 
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -9,7 +11,7 @@ import java.util.concurrent.CompletionStage;
 
 public class WebSocketFunction implements SourceFunction<String> {
     private static final long serialVersionUID = 3978123556403297086L;
-
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketFunction.class);
     private volatile boolean isRunning = true;
     private final String url;
     private String message;
@@ -36,7 +38,7 @@ public class WebSocketFunction implements SourceFunction<String> {
 
                     @Override
                     public void onOpen(WebSocket webSocket) {
-                        System.out.println("onOpen using subprotocol " + webSocket.getSubprotocol());
+                        LOG.info("WebSocket opened using subprotocol {}", webSocket.getSubprotocol());
                         webSocket.request(1);
                     }
 
@@ -48,25 +50,24 @@ public class WebSocketFunction implements SourceFunction<String> {
 
                     @Override
                     public void onError(WebSocket webSocket, Throwable error) {
-                        System.out.println("Error: " + error.getMessage());
-                        error.printStackTrace();
+                        LOG.error("WebSocket error: {}", error.getMessage(), error);
                     }
 
                     @Override
                     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                        System.out.println("WebSocket closed with status " + statusCode + " and reason: " + reason);
+                        LOG.info("WebSocket closed with status {} and reason: {}", statusCode, reason);
                         return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
                     }
 
                     @Override
                     public CompletionStage<?> onPing(WebSocket webSocket, java.nio.ByteBuffer message) {
-                        System.out.println("Ping: " + new String(message.array()));
+                        LOG.debug("Received Ping: {}", new String(message.array()));
                         return WebSocket.Listener.super.onPing(webSocket, message);
                     }
 
                     @Override
                     public CompletionStage<?> onPong(WebSocket webSocket, java.nio.ByteBuffer message) {
-                        System.out.println("Pong: " + new String(message.array()));
+                        LOG.debug("Received Pong: {}", new String(message.array()));
                         return WebSocket.Listener.super.onPong(webSocket, message);
                     }
 
